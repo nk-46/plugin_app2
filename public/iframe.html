@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatGPT App</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Include Font Awesome CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <h2 class="u-semibold u-fs-xl">Hello, <span id="name">World</span>!</h2>
+  <div>
+    <textarea id="userInput" placeholder="Enter your response here..." rows="4" cols="50"></textarea>
+    <button id="enhanceButton">Enhance</button>
+  </div>
+  <div id="enhancedResponse"></div>
+  <!-- Copy button with icon -->
+  <button id="copyButton"><i class="fas fa-copy"></i> </button>
+
+  <script src="https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js"></script>
+  <script>
+    var client = ZAFClient.init();
+    client.invoke('resize', { width: '100%', height: '400px' });
+
+    async function displayUserName() {
+      const response = await client.get("currentUser.name");
+      const name = response["currentUser.name"];
+      const span = document.getElementById("name");
+      span.innerText = name;
+    }
+
+    async function enhanceText() {
+    const userInput = document.getElementById("userInput").value;
+    try {
+      const response = await fetch('http://localhost:5000/enhance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userInput })
+      });
+      if (!response.ok) {
+        throw new Error('Failed to enhance text');
+      }
+      const data = await response.json();
+      document.getElementById("enhancedResponse").innerText = data.enhancedText;
+    } catch (error) {
+      console.error('Error enhancing text:', error);
+      // Handle the error appropriately (e.g., display error message)
+    }
+  }
+
+  document.getElementById("enhanceButton").addEventListener("click", enhanceText);
+
+  displayUserName();
+
+  // Add event listener to copy button
+  document.getElementById("copyButton").addEventListener("click", function() {
+    const enhancedResponse = document.getElementById("enhancedResponse");
+    // Create a temporary textarea element
+    const textarea = document.createElement("textarea");
+    // Set the value of the textarea to the enhanced response
+    textarea.value = enhancedResponse.innerText;
+    // Append the textarea to the document body
+    document.body.appendChild(textarea);
+    // Select the content of the textarea
+    textarea.select();
+    // Copy the selected text
+    document.execCommand("copy");
+    // Remove the temporary textarea
+    document.body.removeChild(textarea);
+    // Alert the user that the text has been copied
+    alert("Copied to clipboard!");
+  });
+  </script>
+</body>
+</html>
